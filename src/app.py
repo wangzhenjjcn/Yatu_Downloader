@@ -10,6 +10,7 @@ from selenium.webdriver.common.keys import Keys
 from webdriver_manager.chrome import ChromeDriverManager
 import subprocess
 import platform
+import hashlib
 
 try:
     from tkinter import *
@@ -131,6 +132,8 @@ class Application(Application_ui):
     #这个类实现具体的事件处理回调函数。界面生成代码在Application_ui中。
     def __init__(self, master=None):
         Application_ui.__init__(self, master)
+        self.DownloadListBtn.config(state="disable")
+        self.DownloadBtn.config(state="disable")
         self.path=os.path.dirname(os.path.realpath(sys.argv[0]))
         self.downloadUrl=""
         self.downloadFoderPath=""
@@ -148,11 +151,10 @@ class Application(Application_ui):
             print("tmp inited!")
         self.downloadFoderPath=tmpDir
         self.DownloadFolderLabelVar.set(tmpDir)
-        # if not os.path.exists(self.tmpDir):
-        #     print("tmp missing creat...")
-        #     os.makedirs(self.tmpDir) 
-        #     print("tmp missing created!")
-        #     print("tmp inited!")
+        self.AddLog("Check Bin Files",4)
+        downloadBinProcess = threading.Thread(target=self.downloadBin)
+        downloadBinProcess.start()
+        print("System Ready!")
         
 
     def CloseChromeBtn_Cmd(self, event=None):
@@ -195,7 +197,7 @@ class Application(Application_ui):
             self.AddLog("System Downloading...Pls wait Finish",4)
             # return
         self.downloadUrl=self.M3U8AdressTextVar.get()
-        if self.downloadUrl.lower().startswith("http") and self.downloadUrl.lower().endswith("m3u8"):
+        if self.downloadUrl.lower().startswith("http")  :
             self.AddLog("address:[%s]"%self.downloadUrl,4)
             if len(self.FilenameText.get())>0:
                 filenameStr=self.FilenameText.get().replace('*','').replace('\\','').replace('#','').replace('@','').replace('$','')
@@ -219,7 +221,8 @@ class Application(Application_ui):
     def AddListBtn_Cmd(self, event=None):
         #TODO, Please finish the function here!
         self.AddLog("AddListBtn_Cmd",6)
-        if self.M3U8AdressTextVar.get().lower().startswith("http") and self.M3U8AdressTextVar.get().lower().endswith("m3u8"):
+        if self.M3U8AdressTextVar.get().lower().startswith("http") :
+            # and self.M3U8AdressTextVar.get().lower().endswith("m3u8")
             self.AddLog("address:[%s]"%self.M3U8AdressTextVar.get(),2)
             if self.M3U8AdressTextVar.get() not in self.downloadUrlList.values():
                 self.downloadUrlList[self.getFileName()]=(self.M3U8AdressTextVar.get())
@@ -285,7 +288,7 @@ class Application(Application_ui):
                 self.LogList.itemconfig(1,bg="#A8ABC4")  
                 self.LogList.itemconfig(1,fg="#000000")
             if loglevel>3:
-                self.LogList.itemconfig(1,bg="#97EEEC")  
+                self.LogList.itemconfig(1,bg="#97EEEC")  #Green
                 self.LogList.itemconfig(1,fg="#000000")
             if loglevel>5:
                 self.LogList.itemconfig(1,bg="#FFF200")  #Yellow
@@ -323,7 +326,88 @@ class Application(Application_ui):
         returnvar=subprocess.run(command)
         self.AddLog("Download Finish: %s [%s]"%(fileName,url),0)
         self.downloading=False
+        if  not self.downloading:
+            self.DownloadListBtn.config(state="NORMAL")
+            self.DownloadBtn.config(state="NORMAL")
         return returnvar
+
+
+    
+
+    def downloadBin(self):
+        try:
+            self.downloading=True
+            path=os.path.dirname(os.path.realpath(sys.argv[0]))
+            programPath=path+"\\Bin\\"
+            processor=programPath+"\\cli.exe"
+            ffmpegFile=programPath+"\\ffmpeg.exe"
+            if not os.path.exists(processor):                
+                if not os.path.exists(programPath):
+                    print("programPath missing creat...")
+                    self.AddLog("programPath missing created...",7)
+                    os.makedirs(programPath) 
+                self.AddLog("Downloading CLi...",5)
+                processorurl='https://github.com/wangzhenjjcn/Yatu_Downloader/releases/download/Pre/cli.exe'
+                response = requests.get(processorurl, stream=True)
+                response.raise_for_status()  # Raise an exception for HTTP errors
+                # Create a temporary directory
+                with open(processor, 'wb') as file:
+                    for chunk in response.iter_content(chunk_size=8192):
+                        file.write(chunk)
+                self.AddLog("Downloaded CLi cli.exe:[%s]..."%self.compute_md5(processor),9)
+                time.sleep(1)
+            else:
+                self.AddLog("Downloaded CLi cli.exe:[%s]..."%self.compute_md5(processor),5)
+            
+
+
+            if not os.path.exists(ffmpegFile):                
+                if not os.path.exists(programPath):
+                    print("programPath missing creat...")
+                    self.AddLog("programPath missing created...",7)
+                    os.makedirs(programPath) 
+                self.AddLog("Downloading ffmpeg...",5)
+                ffmpegurl='https://github.com/wangzhenjjcn/Yatu_Downloader/releases/download/Pre/ffmpeg.exe'
+                response2 = requests.get(ffmpegurl, stream=True)
+                response2.raise_for_status()  # Raise an exception for HTTP errors
+                # Create a temporary directory
+                with open(ffmpegFile, 'wb') as file2:
+                    for chunk2 in response2.iter_content(chunk_size=8192):
+                        file2.write(chunk2)
+                self.AddLog("Downloaded ffmpeg ffmpeg.exe:[%s]..."%self.compute_md5(ffmpegFile),9)
+            else:
+                self.AddLog("Downloaded ffmpeg ffmpeg.exe:[%s]..."%self.compute_md5(ffmpegFile),5)
+            time.sleep(1)
+            self.downloading=False
+        except Exception as e:
+            self.AddLog(str(e),9)
+            print(e)
+        if self.compute_md5(processor)=="426443628a70ea47ac05b67f665666c1":
+            self.AddLog("Check cli.exe:[%s] Success:[426443628a70ea47ac05b67f665666c1]..."%self.compute_md5(ffmpegFile),5)
+        else:
+            self.AddLog("Check cli err cli.exe:[%s] require:[426443628a70ea47ac05b67f665666c1]..."%self.compute_md5(ffmpegFile),5)
+            self.downloading=True
+        if  self.compute_md5(ffmpegFile)=="d2375a936c266904c2eb225ce9828047":
+            self.AddLog("Check ffmpeg ffmpeg.exe:[%s] Success:[d2375a936c266904c2eb225ce9828047]..."%self.compute_md5(ffmpegFile),5)
+        else:
+            self.downloading=True
+            self.AddLog("Check ffmpeg err ffmpeg.exe:[%s] require:[d2375a936c266904c2eb225ce9828047]..."%self.compute_md5(ffmpegFile),5)
+        if  not self.downloading:
+            self.DownloadListBtn.config(state="NORMAL")
+            self.DownloadBtn.config(state="NORMAL")
+
+
+
+
+    def compute_md5(self,file_path):
+        """Compute and return the MD5 hash of a file."""
+        md5 = hashlib.md5()
+        with open(file_path, 'rb') as f:
+            for chunk in iter(lambda: f.read(4096), b''):
+                md5.update(chunk)
+        return md5.hexdigest()
+
+
 
 if __name__ == "__main__":
     top = Tk()
