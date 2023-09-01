@@ -8,5 +8,6 @@ Downloads/*
 src/Bin/ffmpegMain.exe
 src/build/*
 src/dist/*
+src/Downloads/*
 *.spec
 *.bat

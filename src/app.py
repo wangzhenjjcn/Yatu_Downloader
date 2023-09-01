@@ -304,12 +304,19 @@ class Application(Application_ui):
         path=os.path.dirname(os.path.realpath(sys.argv[0]))
         programPath=path+"\\Bin\\"
         if not os.path.exists(programPath):
-            print("tmp missing creat...")
+            print("programPath missing creat...")
             os.makedirs(programPath) 
-            print("tmp missing created!")
-            print("tmp inited!")
+            print("programPath missing created!")
+            print("programPath inited!")
         maxThreads=32
         processor=programPath+"\\cli.exe"
+        if not os.path.exists(processor):
+            print("processor missing...")
+            processor=path+"\\cli.exe"
+            if not os.path.exists(processor):
+                print("root processor missing...")
+                self.downloading=False
+                return None
         # param = "  -workDir %s -saveName %s  -maxThreads %s -enableDelAfterDone -disableDateInfo  "%(tmpDir,fileName,maxThreads)
         command = [processor, url, "--workDir",self.downloadFoderPath,"--saveName",fileName,"--maxThreads",str(maxThreads),"--enableDelAfterDone","--disableDateInfo"]
         self.AddLog("Download Start: %s [%s]"%(fileName,url),0)
