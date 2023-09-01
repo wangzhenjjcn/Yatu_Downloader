@@ -1,0 +1,7 @@
+
+*.log
+*.ts
+*.tsdownloading
+*.mp4
+*.m3u8
+Downloads/*
