@@ -57,6 +57,13 @@ Begin VB.Form YatuDownloader
       TabIndex        =   0
       Top             =   120
       Width           =   17055
+      Begin VB.TextBox FilenameText 
+         Height          =   495
+         Left            =   12000
+         TabIndex        =   17
+         Top             =   360
+         Width           =   3015
+      End
       Begin VB.CommandButton StopDownloadBtn 
          Caption         =   "停止下载"
          Height          =   615
@@ -111,7 +118,15 @@ Begin VB.Form YatuDownloader
          Left            =   1560
          TabIndex        =   3
          Top             =   360
-         Width           =   13455
+         Width           =   8535
+      End
+      Begin VB.Label Label4 
+         Caption         =   "文件名："
+         Height          =   255
+         Left            =   10920
+         TabIndex        =   18
+         Top             =   480
+         Width           =   855
       End
       Begin VB.Label Label3 
          Caption         =   "下载队列："
